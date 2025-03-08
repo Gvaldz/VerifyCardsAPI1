@@ -25,24 +25,25 @@ func NewCardController(
 func (c *CardController) ValidateCard(w http.ResponseWriter, r *http.Request) {
     var card entities.Card
     if err := json.NewDecoder(r.Body).Decode(&card); err != nil {
-        http.Error(w, "Invalid request body", http.StatusBadRequest)
+        http.Error(w, `{"error": "Invalid request body"}`, http.StatusBadRequest)
         return
     }
 
     isValid, err := c.validateCardUseCase.Execute(card)
     if err != nil {
-        http.Error(w, "Internal server error", http.StatusInternalServerError)
+        http.Error(w, `{"error": "Internal server error"}`, http.StatusInternalServerError)
         return
     }
 
     if !isValid {
         c.rabbitMQProducer.SendCardVerifiedMessage("Datos incorrectos: " + card.Number)
-        http.Error(w, "Datos incorrectos", http.StatusUnauthorized)
+        http.Error(w, `{"error": "Datos incorrectos"}`, http.StatusUnauthorized)
         return
     }
 
     c.rabbitMQProducer.SendCardVerifiedMessage("Datos correctos: " + card.Number)
 
+    w.Header().Set("Content-Type", "application/json")
     w.WriteHeader(http.StatusOK)
-    w.Write([]byte("Datos correctos"))
+    json.NewEncoder(w).Encode(map[string]string{"message": "Datos correctos"})
 }
