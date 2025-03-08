@@ -41,9 +41,9 @@ func (c *CardController) ValidateCard(w http.ResponseWriter, r *http.Request) {
         return
     }
 
-    c.rabbitMQProducer.SendCardVerifiedMessage("Datos correctos: " + card.Number)
+    c.rabbitMQProducer.SendCardVerifiedMessage("Datos correctos, compra realizada. ")
 
     w.Header().Set("Content-Type", "application/json")
     w.WriteHeader(http.StatusOK)
-    json.NewEncoder(w).Encode(map[string]string{"message": "Datos correctos"})
+    json.NewEncoder(w).Encode(map[string]string{"message": "Datos correctos, compra cancelada."})
 }
